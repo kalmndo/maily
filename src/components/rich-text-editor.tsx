@@ -88,6 +88,7 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
   useEffect(() => { onUpdateRef.current = onUpdate })
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Underline,
