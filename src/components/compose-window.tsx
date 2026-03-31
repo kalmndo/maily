@@ -62,7 +62,10 @@ export function ComposeWindow({
       {/* Compose window — single element, layout-animated between positions */}
       <motion.div
         layout
-        transition={{ type: 'spring', stiffness: 300, damping: 30, duration: 0.35 }}
+        role="dialog"
+        aria-label="Compose email"
+        aria-modal={isExpanded ? "true" : undefined}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className={cn(
           'fixed z-50 flex flex-col overflow-hidden rounded-xl border bg-background shadow-2xl',
           isExpanded
@@ -74,7 +77,7 @@ export function ComposeWindow({
       >
         {/* Title bar */}
         <div
-          className="flex shrink-0 cursor-default items-center justify-between bg-foreground px-3 py-2"
+          className="flex shrink-0 cursor-pointer items-center justify-between bg-foreground px-3 py-2"
           onDoubleClick={() => setMode(m => m === 'minimized' ? 'floating' : 'minimized')}
         >
           <span className="truncate text-sm font-medium text-background">
@@ -111,19 +114,18 @@ export function ComposeWindow({
           </div>
         </div>
 
-        {/* Form body — hidden when minimized, shown otherwise */}
-        <motion.div
-          layout
-          className={cn('flex flex-1 flex-col overflow-hidden', isMinimized && 'hidden')}
-        >
-          <ComposeForm
-            defaultTo={defaultTo}
-            defaultSubject={defaultSubject}
-            inReplyTo={inReplyTo}
-            resetKey={resetKey}
-            onSent={onClose}
-          />
-        </motion.div>
+        {/* Form body — conditionally rendered so Framer Motion can animate it */}
+        {!isMinimized && (
+          <motion.div layout className="flex flex-1 flex-col overflow-hidden">
+            <ComposeForm
+              defaultTo={defaultTo}
+              defaultSubject={defaultSubject}
+              inReplyTo={inReplyTo}
+              resetKey={resetKey}
+              onSent={onClose}
+            />
+          </motion.div>
+        )}
       </motion.div>
     </>
   )
