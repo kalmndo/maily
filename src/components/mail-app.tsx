@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './app-sidebar'
 import { ReadingPane } from './reading-pane'
-import { ComposeModal } from './compose-modal'
+import { ComposeWindow } from './compose-window'
 import type { EmailRow, EmailDetail, SentRow, Label } from '@/lib/types'
 
 interface MailAppProps {
@@ -21,6 +21,10 @@ export function MailApp({ userEmail, isAdmin }: MailAppProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [composing, setComposing] = useState(false)
+  const [composeKey, setComposeKey] = useState(0)
+  const [replyTo, setReplyTo] = useState('')
+  const [replySubject, setReplySubject] = useState('')
+  const [replyMessageId, setReplyMessageId] = useState<string | undefined>()
 
   const fetchList = useCallback(async () => {
     setLoading(true)
@@ -57,6 +61,22 @@ export function MailApp({ userEmail, isAdmin }: MailAppProps) {
       setError('Could not open email. Try again.')
       setSelectedId(null)
     }
+  }
+
+  function handleCompose() {
+    setReplyTo('')
+    setReplySubject('')
+    setReplyMessageId(undefined)
+    setComposeKey(k => k + 1)
+    setComposing(true)
+  }
+
+  function handleReply(email: EmailDetail) {
+    setReplyTo(email.fromEmail)
+    setReplySubject(email.subject ? `Re: ${email.subject}` : '')
+    setReplyMessageId(email.messageId ?? undefined)
+    setComposeKey(k => k + 1)
+    setComposing(true)
   }
 
   async function handleStar() {
@@ -98,9 +118,16 @@ export function MailApp({ userEmail, isAdmin }: MailAppProps) {
         isAdmin={isAdmin}
         onLabelChange={setLabel}
         onEmailSelect={selectEmail}
-        onCompose={() => setComposing(true)}
+        onCompose={handleCompose}
       />
-      <ComposeModal open={composing} onOpenChange={setComposing} />
+      <ComposeWindow
+        open={composing}
+        onClose={() => setComposing(false)}
+        defaultTo={replyTo}
+        defaultSubject={replySubject}
+        inReplyTo={replyMessageId}
+        resetKey={composeKey}
+      />
       <SidebarInset className="overflow-hidden">
 {error && (
           <div className="flex items-center justify-between gap-2 bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm text-destructive shrink-0">
@@ -113,7 +140,7 @@ export function MailApp({ userEmail, isAdmin }: MailAppProps) {
 
         <div className="flex flex-1 overflow-hidden">
           {selectedEmail ? (
-            <ReadingPane email={selectedEmail} onStar={handleStar} onTrash={handleTrash} />
+            <ReadingPane email={selectedEmail} onStar={handleStar} onTrash={handleTrash} onReply={handleReply} />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
               Select an email to read

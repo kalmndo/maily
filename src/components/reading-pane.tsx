@@ -4,13 +4,13 @@ import { useState, useEffect, useRef } from 'react'
 import { Star, Trash2, Reply, Paperclip } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { ComposeModal } from './compose-modal'
 import type { EmailDetail } from '@/lib/types'
 
 interface ReadingPaneProps {
   email: EmailDetail
   onStar: () => void
   onTrash: () => void
+  onReply: (email: EmailDetail) => void
 }
 
 const HEIGHT_SCRIPT = `<script>
@@ -20,8 +20,7 @@ const HEIGHT_SCRIPT = `<script>
   new ResizeObserver(report).observe(document.documentElement)
 </script>`
 
-export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
-  const [replyOpen, setReplyOpen] = useState(false)
+export function ReadingPane({ email, onStar, onTrash, onReply }: ReadingPaneProps) {
   const [iframeHeight, setIframeHeight] = useState(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -63,7 +62,7 @@ export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
 
           {/* Actions — Reply has hierarchy; Star and Trash are demoted to icon ghosts */}
           <div className="flex shrink-0 items-center gap-1 pt-0.5">
-            <Button size="sm" onClick={() => setReplyOpen(true)}>
+            <Button size="sm" onClick={() => onReply(email)}>
               <Reply className="mr-1.5 h-3.5 w-3.5" /> Reply
             </Button>
             <Button
@@ -114,13 +113,6 @@ export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
         </>
       )}
 
-      <ComposeModal
-        open={replyOpen}
-        onOpenChange={setReplyOpen}
-        defaultTo={email.fromEmail}
-        defaultSubject={email.subject ? `Re: ${email.subject}` : ''}
-        inReplyTo={email.messageId ?? undefined}
-      />
     </div>
   )
 }
