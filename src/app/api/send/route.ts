@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { error } = await resend.emails.send({
-    from: `${process.env.FROM_NAME} <${ctx.mailboxAddress}>`,
+    from: `${ctx.session.user.name} <${ctx.mailboxAddress}>`,
     to,
     subject,
     html: bodyHtml,

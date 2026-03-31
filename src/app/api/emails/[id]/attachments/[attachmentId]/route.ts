@@ -68,19 +68,21 @@ async function getPresignedR2Url(r2Key: string): Promise<string> {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; attachmentId: string } }
+  { params }: { params: Promise<{ id: string; attachmentId: string }> }
 ) {
   const ctx = await getSessionWithMailbox(req)
   if (!ctx) return Response.json({ error: 'Unauthorized' }, { status: 401 })
   if (!ctx.mailboxAddress) return Response.json({ error: 'No mailbox' }, { status: 404 })
 
+  const { id, attachmentId } = await params
+
   const email = await db.query.emails.findFirst({
-    where: and(eq(emails.id, params.id), eq(emails.toEmail, ctx.mailboxAddress)),
+    where: and(eq(emails.id, id), eq(emails.toEmail, ctx.mailboxAddress)),
   })
   if (!email) return Response.json({ error: 'Not found' }, { status: 404 })
 
   const attachment = await db.query.attachments.findFirst({
-    where: and(eq(attachments.id, params.attachmentId), eq(attachments.emailId, params.id)),
+    where: and(eq(attachments.id, attachmentId), eq(attachments.emailId, id)),
   })
   if (!attachment) return Response.json({ error: 'Not found' }, { status: 404 })
 
