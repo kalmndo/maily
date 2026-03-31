@@ -88,7 +88,7 @@ export function MailApp({ userEmail, isAdmin }: MailAppProps) {
   }
 
   return (
-    <SidebarProvider style={{ "--sidebar-width": "350px" } as React.CSSProperties}>
+    <SidebarProvider style={{ "--sidebar-width": "350px" } as React.CSSProperties} className="h-svh overflow-hidden">
       <AppSidebar
         activeLabel={label}
         emails={emailList}
@@ -101,7 +101,7 @@ export function MailApp({ userEmail, isAdmin }: MailAppProps) {
         onCompose={() => setComposing(true)}
       />
       <ComposeModal open={composing} onOpenChange={setComposing} />
-      <SidebarInset>
+      <SidebarInset className="overflow-hidden">
 {error && (
           <div className="flex items-center justify-between gap-2 bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm text-destructive shrink-0">
             <span>{error}</span>

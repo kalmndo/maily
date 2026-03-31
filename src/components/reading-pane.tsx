@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Star, Trash2, Reply, Paperclip } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -13,8 +13,29 @@ interface ReadingPaneProps {
   onTrash: () => void
 }
 
+const HEIGHT_SCRIPT = `<script>
+  function report() { window.parent.postMessage({type:'iframeHeight',h:document.documentElement.scrollHeight},'*') }
+  window.addEventListener('load', report)
+  setTimeout(report, 300)
+  new ResizeObserver(report).observe(document.documentElement)
+</script>`
+
 export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
   const [replyOpen, setReplyOpen] = useState(false)
+  const [iframeHeight, setIframeHeight] = useState(0)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  useEffect(() => {
+    setIframeHeight(0)
+  }, [email.id])
+
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.data?.type === 'iframeHeight') setIframeHeight(e.data.h)
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
@@ -69,17 +90,21 @@ export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
 
       <Separator />
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-hidden p-4">
+        <div className="h-full overflow-y-auto rounded-xl">
         {email.bodyHtml ? (
           <iframe
-            srcDoc={`<style>body{margin:0 auto !important;max-width:680px !important;padding:0 16px !important;}</style>${email.bodyHtml}`}
-            sandbox="allow-popups allow-popups-to-escape-sandbox"
-            className="h-full w-full border-0"
+            ref={iframeRef}
+            srcDoc={`<style>body{margin:0 auto !important;max-width:680px !important;padding:0 16px !important}</style>${HEIGHT_SCRIPT}${email.bodyHtml}`}
+            sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts"
+            className="w-full border-0 rounded-xl overflow-hidden"
+            style={{ height: iframeHeight || '100%', minHeight: iframeHeight || 600 }}
             title="Email body"
           />
         ) : (
-          <pre className="whitespace-pre-wrap text-sm leading-relaxed">{email.bodyText ?? '(no content)'}</pre>
+          <pre className="whitespace-pre-wrap text-sm leading-relaxed p-4">{email.bodyText ?? '(no content)'}</pre>
         )}
+        </div>
       </div>
 
       {email.attachments.length > 0 && (
