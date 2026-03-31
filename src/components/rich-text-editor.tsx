@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditor, EditorContent, Editor, Extension } from '@tiptap/react'
+import { useEditor, EditorContent, Extension } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import { TextStyle } from '@tiptap/extension-text-style'
@@ -10,7 +10,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
   Link2, Palette,
 } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 // Minimal font-size extension — avoids needing Tiptap Pro
@@ -84,6 +84,9 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
 
+  const onUpdateRef = useRef(onUpdate)
+  useEffect(() => { onUpdateRef.current = onUpdate })
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -98,7 +101,7 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] px-3 py-2',
       },
     },
-    onUpdate: ({ editor }) => onUpdate(editor.getHTML()),
+    onUpdate: ({ editor }) => onUpdateRef.current(editor.getHTML()),
   })
 
   const setLink = useCallback(() => {
@@ -139,7 +142,17 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
 
         {/* Link */}
         <div className="relative">
-          <ToolbarButton onClick={() => setShowLinkInput(v => !v)} active={editor.isActive('link')} title="Insert link">
+          <ToolbarButton
+            onClick={() => {
+              if (editor.isActive('link')) {
+                editor.chain().focus().unsetLink().run()
+              } else {
+                setShowLinkInput(v => !v)
+              }
+            }}
+            active={editor.isActive('link')}
+            title="Insert link"
+          >
             <Link2 className="h-3.5 w-3.5" />
           </ToolbarButton>
           {showLinkInput && (
@@ -150,7 +163,7 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
                 placeholder="https://…"
                 value={linkUrl}
                 onChange={e => setLinkUrl(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && setLink()}
+                onKeyDown={e => (e.key === 'Enter' && setLink()) || (e.key === 'Escape' && setShowLinkInput(false))}
                 className="h-7 w-48 rounded border px-2 text-xs focus:outline-none"
               />
               <button type="button" onClick={setLink} className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
@@ -168,7 +181,7 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
           onChange={e => {
             const val = e.target.value
             if (val) {
-              editor.chain().focus().setMark('textStyle', { fontSize: val }).run()
+              ;(editor.chain().focus() as any).setFontSize(val).run()
             }
           }}
           defaultValue=""
@@ -185,7 +198,10 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
             <Palette className="h-3.5 w-3.5" />
           </ToolbarButton>
           {showColorPicker && (
-            <div className="absolute bottom-full left-0 z-10 mb-1 flex flex-wrap gap-1 rounded border bg-popover p-2 shadow-md" style={{ width: 100 }}>
+            <div
+              className="absolute bottom-full left-0 z-10 mb-1 flex flex-wrap gap-1 rounded border bg-popover p-2 shadow-md w-[100px]"
+              onKeyDown={e => e.key === 'Escape' && setShowColorPicker(false)}
+            >
               {COLORS.map(color => (
                 <button
                   key={color}
@@ -205,12 +221,14 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
       </div>
 
       {/* Editor body */}
-      <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
-      {!editor.getText() && (
-        <div className="pointer-events-none absolute px-3 py-2 text-sm text-muted-foreground">
-          {placeholder}
-        </div>
-      )}
+      <div className="relative flex-1 overflow-y-auto">
+        <EditorContent editor={editor} />
+        {!editor.getText() && (
+          <div className="pointer-events-none absolute left-0 top-0 px-3 py-2 text-sm text-muted-foreground">
+            {placeholder}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
