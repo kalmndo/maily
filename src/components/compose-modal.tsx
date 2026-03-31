@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,35 +16,47 @@ interface ComposeModalProps {
 }
 
 export function ComposeModal({ open, onOpenChange, defaultTo = '', defaultSubject = '', inReplyTo }: ComposeModalProps) {
-  const [to, setTo] = useState(defaultTo)
-  const [subject, setSubject] = useState(defaultSubject)
+  const [to, setTo] = useState('')
+  const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Reset form fields whenever the modal opens or its target changes.
+  // Using `open` as the primary trigger ensures a fresh state for each new compose/reply.
+  useEffect(() => {
+    if (open) {
+      setTo(defaultTo)
+      setSubject(defaultSubject)
+      setBody('')
+      setError(null)
+    }
+  }, [open, defaultTo, defaultSubject])
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setSending(true)
 
-    const res = await fetch('/api/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, subject, bodyText: body, inReplyTo }),
-    })
+    try {
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, bodyText: body, inReplyTo }),
+      })
 
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error ?? 'Failed to send')
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? 'Failed to send. Please try again.')
+        return
+      }
+
+      onOpenChange(false)
+    } catch {
+      setError('Failed to send. Check your connection and try again.')
+    } finally {
       setSending(false)
-      return
     }
-
-    onOpenChange(false)
-    setTo(defaultTo)
-    setSubject(defaultSubject)
-    setBody('')
-    setSending(false)
   }
 
   return (
@@ -60,7 +72,13 @@ export function ComposeModal({ open, onOpenChange, defaultTo = '', defaultSubjec
           </div>
           <div className="space-y-1">
             <Label htmlFor="subject">Subject</Label>
-            <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} required />
+            <Input
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              maxLength={255}
+              required
+            />
           </div>
           <div className="space-y-1">
             <Label htmlFor="body">Message</Label>
