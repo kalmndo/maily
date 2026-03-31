@@ -1,0 +1,10 @@
+name = "maily-email-worker"
+compatibility_date = "2024-01-01"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "maily-attachments"
+
+# Secrets — set via: wrangler secret put KEY
+# SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY
