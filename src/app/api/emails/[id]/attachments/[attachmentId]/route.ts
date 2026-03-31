@@ -4,7 +4,6 @@ import { db } from '@/db'
 import { emails, attachments } from '@/db/schema'
 import { getSessionWithMailbox } from '@/lib/session'
 
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!
@@ -43,10 +42,15 @@ async function getPresignedR2Url(r2Key: string): Promise<string> {
     return hmac(kService, 'aws4_request')
   }
 
+  const sortedQuery = Array.from(url.searchParams.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&')
+
   const canonicalRequest = [
     'GET',
-    `/${R2_BUCKET}/${r2Key}`,
-    url.searchParams.toString(),
+    url.pathname,
+    sortedQuery,
     `host:${url.host}\n`,
     'host',
     'UNSIGNED-PAYLOAD',
@@ -61,9 +65,9 @@ async function getPresignedR2Url(r2Key: string): Promise<string> {
   const signingKey = await getSigningKey()
   const signature = Buffer.from(await hmac(signingKey, stringToSign)).toString('hex')
 
-  url.searchParams.set('X-Amz-Signature', signature)
+  const finalQuery = sortedQuery + `&X-Amz-Signature=${signature}`
 
-  return url.toString()
+  return `${url.origin}${url.pathname}?${finalQuery}`
 }
 
 export async function GET(
