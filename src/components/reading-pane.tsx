@@ -18,28 +18,53 @@ export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 p-4">
-        <h2 className="text-xl font-semibold">{email.subject ?? '(no subject)'}</h2>
-        <div className="mt-1 text-sm text-muted-foreground">
-          <span>From: {email.fromName ? `${email.fromName} <${email.fromEmail}>` : email.fromEmail}</span>
-          <span className="mx-2">·</span>
-          <span>{new Date(email.date).toLocaleString()}</span>
+      {/*
+        Unified header zone — subject, metadata, and actions share one spatial region.
+        Eliminates the "two separators sandwiching a thin strip" layout.
+        Reply is the primary action; Star and Trash are icon-only ghosts.
+      */}
+      <div className="shrink-0 px-6 pt-6 pb-5">
+        <div className="flex items-start justify-between gap-6">
+          <div className="min-w-0 flex-1">
+            <h2 className="font-serif text-2xl font-semibold leading-snug tracking-tight text-foreground">
+              {email.subject ?? '(no subject)'}
+            </h2>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground/70">
+                {email.fromName ?? email.fromEmail}
+              </span>
+              {email.fromName && (
+                <span className="text-muted-foreground/60">&lt;{email.fromEmail}&gt;</span>
+              )}
+              <span className="tabular-nums">{new Date(email.date).toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* Actions — Reply has hierarchy; Star and Trash are demoted to icon ghosts */}
+          <div className="flex shrink-0 items-center gap-1 pt-0.5">
+            <Button size="sm" onClick={() => setReplyOpen(true)}>
+              <Reply className="mr-1.5 h-3.5 w-3.5" /> Reply
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={onStar}
+              aria-label={email.starred ? 'Remove star' : 'Star email'}
+            >
+              <Star className={`h-4 w-4 ${email.starred ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={onTrash}
+              aria-label="Move to trash"
+            >
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
         </div>
-      </div>
-
-      <Separator />
-
-      <div className="flex shrink-0 items-center gap-2 px-4 py-2">
-        <Button size="sm" variant="outline" onClick={() => setReplyOpen(true)}>
-          <Reply className="mr-1 h-4 w-4" /> Reply
-        </Button>
-        <Button size="sm" variant="outline" onClick={onStar}>
-          <Star className={`mr-1 h-4 w-4 ${email.starred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-          {email.starred ? 'Unstar' : 'Star'}
-        </Button>
-        <Button size="sm" variant="outline" onClick={onTrash}>
-          <Trash2 className="mr-1 h-4 w-4" /> Trash
-        </Button>
       </div>
 
       <Separator />
@@ -48,12 +73,12 @@ export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
         {email.bodyHtml ? (
           <iframe
             srcDoc={email.bodyHtml}
-            sandbox="allow-same-origin"
+            sandbox="allow-popups allow-popups-to-escape-sandbox"
             className="h-full w-full border-0"
             title="Email body"
           />
         ) : (
-          <pre className="whitespace-pre-wrap text-sm">{email.bodyText}</pre>
+          <pre className="whitespace-pre-wrap text-sm leading-relaxed">{email.bodyText ?? '(no content)'}</pre>
         )}
       </div>
 
@@ -82,18 +107,23 @@ interface AttachmentListProps {
 
 function AttachmentList({ emailId, attachments }: AttachmentListProps) {
   async function downloadAttachment(attachmentId: string, filename: string) {
-    const res = await fetch(`/api/emails/${emailId}/attachments/${attachmentId}`)
-    const { url } = await res.json()
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
+    try {
+      const res = await fetch(`/api/emails/${emailId}/attachments/${attachmentId}`)
+      if (!res.ok) throw new Error()
+      const { url } = await res.json()
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+    } catch {
+      alert(`Could not download "${filename}". Please try again.`)
+    }
   }
 
   return (
-    <div className="shrink-0 p-4">
-      <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        <Paperclip className="mr-1 inline h-3 w-3" />
+    <div className="shrink-0 px-6 py-4">
+      <p className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <Paperclip className="h-3 w-3 text-primary/60" />
         Attachments
       </p>
       <div className="flex flex-wrap gap-2">
@@ -101,11 +131,11 @@ function AttachmentList({ emailId, attachments }: AttachmentListProps) {
           <button
             key={att.id}
             onClick={() => downloadAttachment(att.id, att.filename)}
-            className="rounded border px-3 py-1 text-sm hover:bg-accent transition-colors"
+            className="rounded border px-3 py-1.5 text-sm hover:bg-accent transition-colors"
           >
             {att.filename}
             {att.size != null && (
-              <span className="ml-1 text-muted-foreground">({formatBytes(att.size)})</span>
+              <span className="ml-1.5 text-muted-foreground">({formatBytes(att.size)})</span>
             )}
           </button>
         ))}
