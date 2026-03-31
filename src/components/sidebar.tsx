@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { ComposeModal } from './compose-modal'
+import { ComposeWindow } from './compose-window'
 import { authClient } from '@/lib/auth-client'
 import type { Label } from '@/lib/types'
 
@@ -98,7 +98,7 @@ export function AppSidebar({ activeLabel, unreadCount, userEmail, isAdmin, onLab
         </SidebarMenu>
       </SidebarFooter>
 
-      <ComposeModal open={composeOpen} onOpenChange={setComposeOpen} />
+      <ComposeWindow open={composeOpen} onClose={() => setComposeOpen(false)} />
     </Sidebar>
   )
 }
