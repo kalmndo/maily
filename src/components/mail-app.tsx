@@ -2,16 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './app-sidebar'
 import { ReadingPane } from './reading-pane'
 import { ComposeModal } from './compose-modal'
@@ -20,13 +11,6 @@ import type { EmailRow, EmailDetail, SentRow, Label } from '@/lib/types'
 interface MailAppProps {
   userEmail: string
   isAdmin: boolean
-}
-
-const LABEL_TITLES: Record<Label, string> = {
-  inbox: 'Inbox',
-  starred: 'Starred',
-  sent: 'Sent',
-  trash: 'Trash',
 }
 
 export function MailApp({ userEmail, isAdmin }: MailAppProps) {
@@ -118,23 +102,7 @@ export function MailApp({ userEmail, isAdmin }: MailAppProps) {
       />
       <ComposeModal open={composing} onOpenChange={setComposing} />
       <SidebarInset>
-        <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">All Inboxes</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{LABEL_TITLES[label]}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </header>
-
-        {error && (
+{error && (
           <div className="flex items-center justify-between gap-2 bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm text-destructive shrink-0">
             <span>{error}</span>
             <button onClick={() => setError(null)} className="shrink-0 rounded p-0.5 hover:bg-destructive/10 transition-colors" aria-label="Dismiss error">
