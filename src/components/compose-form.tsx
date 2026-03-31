@@ -11,7 +11,6 @@ interface ComposeFormProps {
   defaultSubject?: string
   inReplyTo?: string
   onSent?: () => void
-  onCancel?: () => void
   // Increment to reset form (e.g. when opening a new compose)
   resetKey?: string | number
 }
@@ -21,7 +20,6 @@ export function ComposeForm({
   defaultSubject = '',
   inReplyTo,
   onSent,
-  onCancel,
   resetKey,
 }: ComposeFormProps) {
   const [to, setTo] = useState(defaultTo)
@@ -42,7 +40,8 @@ export function ComposeForm({
     setBodyHtml('')
     setError(null)
     setShowCcBcc(false)
-  }, [resetKey, defaultTo, defaultSubject])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]) // defaultTo/defaultSubject intentionally excluded — only resetKey triggers a full reset
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
@@ -92,8 +91,8 @@ export function ComposeForm({
         </div>
         {showCcBcc && (
           <>
-            <Input placeholder="Cc" type="email" value={cc} onChange={e => setCc(e.target.value)} className={fieldClass} />
-            <Input placeholder="Bcc" type="email" value={bcc} onChange={e => setBcc(e.target.value)} className={fieldClass} />
+            <Input placeholder="Cc" type="text" value={cc} onChange={e => setCc(e.target.value)} className={fieldClass} />
+            <Input placeholder="Bcc" type="text" value={bcc} onChange={e => setBcc(e.target.value)} className={fieldClass} />
           </>
         )}
         <Input
