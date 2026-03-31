@@ -17,7 +17,7 @@ export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
   const [replyOpen, setReplyOpen] = useState(false)
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full w-full flex-col overflow-hidden">
       {/*
         Unified header zone — subject, metadata, and actions share one spatial region.
         Eliminates the "two separators sandwiching a thin strip" layout.
@@ -72,7 +72,7 @@ export function ReadingPane({ email, onStar, onTrash }: ReadingPaneProps) {
       <div className="flex-1 overflow-auto p-4">
         {email.bodyHtml ? (
           <iframe
-            srcDoc={email.bodyHtml}
+            srcDoc={`<style>body{margin:0 auto !important;max-width:680px !important;padding:0 16px !important;}</style>${email.bodyHtml}`}
             sandbox="allow-popups allow-popups-to-escape-sandbox"
             className="h-full w-full border-0"
             title="Email body"

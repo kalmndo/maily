@@ -154,6 +154,7 @@ export function AppSidebar({ activeLabel, emails, selectedId, loading, userEmail
             <SidebarGroupContent>
               {visibleEmails.map((email) => {
                 const isSent = activeLabel === "sent"
+                const isUnread = "read" in email && !email.read
                 const name = isSent
                   ? ("toEmail" in email ? email.toEmail : "")
                   : ("fromName" in email && email.fromName) || ("fromEmail" in email ? email.fromEmail : "")
@@ -165,7 +166,8 @@ export function AppSidebar({ activeLabel, emails, selectedId, loading, userEmail
                     className="flex flex-col items-start gap-2 border-b p-4 text-sm leading-tight whitespace-nowrap last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   >
                     <div className="flex w-full items-center gap-2">
-                      <span>{name}</span>{" "}
+                      <span className={isUnread ? "font-semibold" : ""}>{name}</span>
+                      {isUnread && <span className="size-1.5 rounded-full bg-primary shrink-0" />}
                       <span className="ml-auto text-xs">{formatDistanceToNow(email.date)}</span>
                     </div>
                     <span className="font-medium">{email.subject ?? "(no subject)"}</span>
