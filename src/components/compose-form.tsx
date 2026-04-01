@@ -84,7 +84,7 @@ export function ComposeForm({
           <button
             type="button"
             onClick={() => setShowCcBcc(v => !v)}
-            className="shrink-0 px-3 text-xs text-muted-foreground hover:text-foreground"
+            className="h-8 shrink-0 bg-input/50 px-3 text-xs text-muted-foreground hover:text-foreground"
           >
             Cc Bcc
           </button>

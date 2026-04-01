@@ -77,10 +77,10 @@ export function ComposeWindow({
       >
         {/* Title bar */}
         <div
-          className="flex shrink-0 cursor-pointer items-center justify-between bg-foreground px-3 py-2"
+          className="flex shrink-0 cursor-pointer items-center justify-between border-b bg-muted/50 px-3 py-2"
           onDoubleClick={() => setMode(m => m === 'minimized' ? 'floating' : 'minimized')}
         >
-          <span className="truncate text-sm font-medium text-background">
+          <span className="truncate text-sm font-medium text-foreground">
             {title}
           </span>
           <div className="flex items-center gap-0.5">
@@ -88,7 +88,7 @@ export function ComposeWindow({
               type="button"
               title={isMinimized ? 'Restore' : 'Minimize'}
               onClick={() => setMode(m => m === 'minimized' ? 'floating' : 'minimized')}
-              className="rounded p-1 text-background/70 hover:bg-white/10 hover:text-background"
+              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', isMinimized && 'rotate-180')} />
             </button>
@@ -96,7 +96,7 @@ export function ComposeWindow({
               type="button"
               title={isExpanded ? 'Collapse' : 'Expand'}
               onClick={() => setMode(m => m === 'expanded' ? 'floating' : 'expanded')}
-              className="rounded p-1 text-background/70 hover:bg-white/10 hover:text-background"
+              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               {isExpanded
                 ? <Minimize2 className="h-3.5 w-3.5" />
@@ -107,7 +107,7 @@ export function ComposeWindow({
               type="button"
               title="Close"
               onClick={onClose}
-              className="rounded p-1 text-background/70 hover:bg-white/10 hover:text-background"
+              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />
             </button>
