@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     to,
     subject,
     html: bodyHtml,
-    text: bodyText,
+    text: bodyText ?? '',
     headers,
   })
 

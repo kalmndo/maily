@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const body = resetPasswordSchema.safeParse(await req.json())
   if (!body.success) return Response.json({ error: body.error.flatten() }, { status: 400 })
 
-  await auth.api.setPassword({
+  await auth.api.setUserPassword({
     headers: req.headers,
     body: { userId: id, newPassword: body.data.newPassword },
   })

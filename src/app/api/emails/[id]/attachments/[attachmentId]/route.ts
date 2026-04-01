@@ -36,7 +36,7 @@ async function getPresignedR2Url(r2Key: string): Promise<string> {
   }
 
   async function getSigningKey() {
-    const kDate = await hmac(encoder.encode(`AWS4${R2_SECRET_ACCESS_KEY}`), dateStamp)
+    const kDate = await hmac(encoder.encode(`AWS4${R2_SECRET_ACCESS_KEY}`).buffer as ArrayBuffer, dateStamp)
     const kRegion = await hmac(kDate, region)
     const kService = await hmac(kRegion, service)
     return hmac(kService, 'aws4_request')
