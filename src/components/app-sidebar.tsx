@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { InboxIcon, SendIcon, StarIcon, Trash2Icon, TerminalIcon, SquarePenIcon } from "lucide-react"
+import { InboxIcon, SendIcon, StarIcon, Trash2Icon, SquarePenIcon } from "lucide-react"
 import { formatDistanceToNow } from "@/lib/format-date"
 import type { EmailRow, SentRow, Label as LabelType } from "@/lib/types"
 
@@ -71,12 +71,8 @@ export function AppSidebar({ activeLabel, emails, selectedId, loading, userEmail
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
                 <a href="#">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <TerminalIcon className="size-4" />
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">Maily</span>
-                    <span className="truncate text-xs">{userEmail}</span>
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-serif text-lg font-semibold">
+                    M
                   </div>
                 </a>
               </SidebarMenuButton>
