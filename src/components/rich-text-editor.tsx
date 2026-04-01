@@ -8,7 +8,7 @@ import { Color } from '@tiptap/extension-color'
 import { Underline } from '@tiptap/extension-underline'
 import {
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
-  Link2, Palette,
+  Link2, Palette, Trash2,
 } from 'lucide-react'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -83,6 +83,7 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
+  const savedSelection = useRef<{ from: number; to: number } | null>(null)
 
   const onUpdateRef = useRef(onUpdate)
   useEffect(() => { onUpdateRef.current = onUpdate })
@@ -101,15 +102,27 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] px-3 py-2',
       },
+      handleClick: (_view, _pos, event) => {
+        if ((event.target as HTMLElement).closest('a')) {
+          event.preventDefault()
+          return true
+        }
+        return false
+      },
     },
     onUpdate: ({ editor }) => onUpdateRef.current(editor.getHTML()),
   })
 
   const setLink = useCallback(() => {
     if (!editor || !linkUrl) return
-    editor.chain().focus().setLink({ href: linkUrl }).run()
+    const chain = editor.chain().focus()
+    if (savedSelection.current) {
+      chain.setTextSelection(savedSelection.current)
+    }
+    chain.setLink({ href: linkUrl }).run()
     setLinkUrl('')
     setShowLinkInput(false)
+    savedSelection.current = null
   }, [editor, linkUrl])
 
   if (!editor) return null
@@ -142,37 +155,21 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
         <div className="mx-1 h-4 w-px bg-border" />
 
         {/* Link */}
-        <div className="relative">
-          <ToolbarButton
-            onClick={() => {
-              if (editor.isActive('link')) {
-                editor.chain().focus().unsetLink().run()
-              } else {
-                setShowLinkInput(v => !v)
-              }
-            }}
-            active={editor.isActive('link')}
-            title="Insert link"
-          >
-            <Link2 className="h-3.5 w-3.5" />
-          </ToolbarButton>
-          {showLinkInput && (
-            <div className="absolute bottom-full left-0 z-10 mb-1 flex items-center gap-1 rounded border bg-popover p-1 shadow-md">
-              <input
-                autoFocus
-                type="url"
-                placeholder="https://…"
-                value={linkUrl}
-                onChange={e => setLinkUrl(e.target.value)}
-                onKeyDown={e => (e.key === 'Enter' && setLink()) || (e.key === 'Escape' && setShowLinkInput(false))}
-                className="h-7 w-48 rounded border px-2 text-xs focus:outline-none"
-              />
-              <button type="button" onClick={setLink} className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
-                Add
-              </button>
-            </div>
-          )}
-        </div>
+        <ToolbarButton
+          onClick={() => {
+            const { from, to } = editor.state.selection
+            savedSelection.current = { from, to }
+            if (editor.isActive('link')) {
+              const href = editor.getAttributes('link').href ?? ''
+              setLinkUrl(href)
+            }
+            setShowLinkInput(v => !v)
+          }}
+          active={editor.isActive('link')}
+          title="Insert link"
+        >
+          <Link2 className="h-3.5 w-3.5" />
+        </ToolbarButton>
 
         <div className="mx-1 h-4 w-px bg-border" />
 
@@ -200,7 +197,7 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
           </ToolbarButton>
           {showColorPicker && (
             <div
-              className="absolute bottom-full left-0 z-10 mb-1 flex flex-wrap gap-1 rounded border bg-popover p-2 shadow-md w-[100px]"
+              className="absolute top-full left-0 z-10 mt-1 flex flex-wrap gap-1 rounded border bg-popover p-2 shadow-md w-[100px]"
               onKeyDown={e => e.key === 'Escape' && setShowColorPicker(false)}
             >
               {COLORS.map(color => (
@@ -220,6 +217,34 @@ export function RichTextEditor({ onUpdate, placeholder = 'Write your message…'
           )}
         </div>
       </div>
+
+      {/* Link input row */}
+      {showLinkInput && (
+        <div className="flex shrink-0 items-center gap-1 border-b px-2 py-1">
+          <input
+            autoFocus
+            type="url"
+            placeholder="https://…"
+            value={linkUrl}
+            onChange={e => setLinkUrl(e.target.value)}
+            onKeyDown={e => (e.key === 'Enter' && setLink()) || (e.key === 'Escape' && setShowLinkInput(false))}
+            className="h-7 min-w-0 flex-1 rounded border px-2 text-xs focus:outline-none"
+          />
+          <button type="button" onClick={setLink} className="shrink-0 rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
+            {editor.isActive('link') ? 'Update' : 'Add'}
+          </button>
+          {editor.isActive('link') && (
+            <button
+              type="button"
+              title="Remove link"
+              onClick={() => { editor.chain().focus().unsetLink().run(); setShowLinkInput(false) }}
+              className="shrink-0 rounded p-1 text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Editor body */}
       <div className="relative flex-1 overflow-y-auto">

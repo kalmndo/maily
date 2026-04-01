@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 @custom-variant checked (&[data-state=checked]);
@@ -116,4 +117,13 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+.ProseMirror p {
+  margin-top: 0;
+  margin-bottom: 0.6em;
+}
+
+.ProseMirror p:last-child {
+  margin-bottom: 0;
 }

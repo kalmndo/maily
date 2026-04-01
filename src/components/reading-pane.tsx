@@ -20,6 +20,27 @@ const HEIGHT_SCRIPT = `<script>
   new ResizeObserver(report).observe(document.documentElement)
 </script>`
 
+const EMAIL_STYLES = `
+  body { margin: 0 auto !important; max-width: 680px !important; padding: 0 16px !important; font-family: sans-serif; font-size: 14px; line-height: 1.6; }
+  ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin: 0.5rem 0 !important; }
+  ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin: 0.5rem 0 !important; }
+  li { display: list-item !important; margin: 0.2rem 0; }
+  a { color: #2563eb; text-decoration: underline; }
+  blockquote { border-left: 3px solid #e5e7eb; margin: 0.5rem 0; padding-left: 1rem; color: #6b7280; }
+`
+
+function buildSrcDoc(bodyHtml: string): string {
+  const isFullDoc = /<html[\s>]/i.test(bodyHtml)
+  if (isFullDoc) {
+    // Inject into existing <head>, or create one if missing
+    if (/<\/head>/i.test(bodyHtml)) {
+      return bodyHtml.replace(/<\/head>/i, `<style>${EMAIL_STYLES}</style>${HEIGHT_SCRIPT}</head>`)
+    }
+    return bodyHtml.replace(/<html[^>]*>/i, (m) => `${m}<head><style>${EMAIL_STYLES}</style>${HEIGHT_SCRIPT}</head>`)
+  }
+  return `<!DOCTYPE html><html><head><style>${EMAIL_STYLES}</style></head><body>${HEIGHT_SCRIPT}${bodyHtml}</body></html>`
+}
+
 export function ReadingPane({ email, onStar, onTrash, onReply }: ReadingPaneProps) {
   const [iframeHeight, setIframeHeight] = useState(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -94,7 +115,7 @@ export function ReadingPane({ email, onStar, onTrash, onReply }: ReadingPaneProp
         {email.bodyHtml ? (
           <iframe
             ref={iframeRef}
-            srcDoc={`<style>body{margin:0 auto !important;max-width:680px !important;padding:0 16px !important}</style>${HEIGHT_SCRIPT}${email.bodyHtml}`}
+            srcDoc={buildSrcDoc(email.bodyHtml!)}
             sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts"
             className="w-full border-0 rounded-xl overflow-hidden"
             style={{ height: iframeHeight || '100%', minHeight: iframeHeight || 600 }}
